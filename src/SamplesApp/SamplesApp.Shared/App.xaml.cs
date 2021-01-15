@@ -28,6 +28,8 @@ using Uno.Logging;
 using Windows.Graphics.Display;
 using System.Globalization;
 using Windows.UI.ViewManagement;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Console;
 #if HAS_UNO_WINUI
 using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 #else
@@ -50,8 +52,8 @@ namespace SamplesApp
 			// Fix language for UI tests
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-
-			ConfigureFilters(LogExtensionPoint.AmbientLoggerFactory);
+			
+			ConfigureFilters();
 			ConfigureFeatureFlags();
 
 			AssertIssue1790();
@@ -291,12 +293,28 @@ namespace SamplesApp
 			deferral.Complete();
 		}
 
-		void ConfigureFilters(ILoggerFactory factory)
+		void ConfigureFilters()
 		{
 #if HAS_UNO
 			System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) => typeof(App).Log().Error("UnobservedTaskException", e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (s, e) => typeof(App).Log().Error("UnhandledException", e.ExceptionObject as Exception);
 #endif
+			var factory = LoggerFactory.Create(builder =>
+			{
+#if DEBUG
+
+#if __WASM__
+				builder.AddProvider(new Uno.Extensions.Logging.WebAssembly.WebAssemblyConsoleLoggerProvider());
+#endif
+
+#else
+#if __WASM__
+				builder.AddProvider(new Uno.Extensions.Logging.WebAssembly.WebAssemblyConsoleLoggerProvider());
+#else
+				builder.AddConsole();
+#endif
+#endif
+			});
 
 			factory
 				.WithFilter(new FilterLoggerSettings
@@ -332,7 +350,7 @@ namespace SamplesApp
 						// { "Windows.UI.Xaml.Data", LogLevel.Debug },
 
 						//  Binder memory references tracking
-						// { "ReferenceHolder", LogLevel.Debug },
+						 { "Uno.UI.DataBinding.BinderReferenceHolder", LogLevel.Debug },
 
 						// ListView-related messages
 						// { "Windows.UI.Xaml.Controls.ListViewBase", LogLevel.Debug },
@@ -346,14 +364,9 @@ namespace SamplesApp
 						// { "Windows.UI.Xaml.Controls.BufferViewCache", LogLevel.Debug }, //Android
 						// { "Windows.UI.Xaml.Controls.VirtualizingPanelGenerator", LogLevel.Debug }, //WASM
 					}
-				)
-#if DEBUG
-				//.AddConsole(LogLevel.Trace);
-				.AddConsole(LogLevel.Debug);
+				);
 
-#else
-				.AddConsole(LogLevel.Warning);
-#endif
+			Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
 		}
 
 		static void ConfigureFeatureFlags()
