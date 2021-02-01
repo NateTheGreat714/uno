@@ -27,7 +27,11 @@ namespace Uno.UI.SourceGenerators
 			{
 				var basePath = Path.GetDirectoryName(baseAnalyzer);
 
-				foreach (var file in Directory.EnumerateFiles(basePath, "*.dll"))
+				var files = Directory
+					.EnumerateFiles(basePath, "*.dll")
+					.Where(f => Path.GetFileName(f).StartsWith("Uno."));
+
+				foreach (var file in files)
 				{
 					Assembly.LoadFrom(file);
 				}
