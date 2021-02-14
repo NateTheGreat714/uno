@@ -170,7 +170,7 @@
 	</ItemGroup>
   </Target>
 
-  <Target Name="_OptimizeT4Generator" Condition="$([MSBuild]::IsOSUnixLike()) and '$(MSBuildRuntimeType)'!='Core'">
+  <Target Name="_OptimizeT4Generator" Condition="$([MSBuild]::IsOSUnixLike())">
 	<ItemGroup>
 	  <_T4AOTFiles Include="$(T4Path)/*.dll" Exclude="$(T4Path)/System.Text.Encoding.CodePages.dll" />
 	</ItemGroup>
@@ -180,6 +180,10 @@
   </Target>
 
   <Target Name="_InnerGenerateMixins">
-	<Exec Command="&quot;$(T4Bin)&quot; $(InputFile) $(OutputPath)" />
+	<PropertyGroup>
+	  <_MonoPrefix Condition="'$(MSBuildRuntimeType)'=='Core'">mono</_MonoPrefix>
+	</PropertyGroup>
+	
+	<Exec Command="$(_MonoPrefix) &quot;$(T4Bin)&quot; $(InputFile) $(OutputPath)" />
   </Target>
 </Project>
