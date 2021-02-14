@@ -103,7 +103,7 @@ jobs:
   - bash: |
       set -euo pipefail
       IFS=$'\n\t'
-      cd $BUILD_SOURCESDIRECTORY/build/wasm-uitest-binaries/site
+      cd $BUILD_SOURCESDIRECTORY/build/wasm-uitest-binaries/site-netstandard2.0
       python server.py &
       cd $BUILD_SOURCESDIRECTORY/src/SamplesApp/SamplesApp.Wasm.UITests
       npm install
@@ -138,6 +138,14 @@ jobs:
   - Wasm_UITests_Build
   - SamplesApp_UITests_Build
   container: nv-bionic-wasm
+
+  strategy:
+    matrix:
+      net5:
+        SITE_SUFFIX: 'net5.0'
+
+      netstd2_0:
+        SITE_SUFFIX: 'netstandard2.0'
 
   pool:
     vmImage: ${{ parameters.vmImage }}
@@ -181,6 +189,7 @@ jobs:
     env:
       BUILD_SOURCESDIRECTORY: "$(build.sourcesdirectory)"
       BUILD_ARTIFACTSTAGINGDIRECTORY: "$(build.artifactstagingdirectory)"
+      SITE_SUFFIX: "$(SITE_SUFFIX)"
 
     displayName: 'Running UI Tests'
 
@@ -188,7 +197,7 @@ jobs:
     condition: always()
     inputs:
       testResultsFiles: '$(build.sourcesdirectory)/build/TestResult-original.xml'
-      testRunTitle: 'WebAssembly Test Run'
+      testRunTitle: 'WebAssembly Test Run $(SITE_SUFFIX)'
       testResultsFormat: 'NUnit'
       failTaskOnFailedTests: true
       searchFolder: '$(build.artifactstagingdirectory)/screenshots/wasm-automated' # https://github.com/microsoft/azure-pipelines-tasks/issues/10072
