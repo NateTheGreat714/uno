@@ -6,6 +6,7 @@ cd $BUILD_SOURCESDIRECTORY/build/wasm-uitest-binaries
 
 npm i chromedriver@84.0.1
 npm i puppeteer@5.1.0
+dotnet tool install --global dotnet-serve --version 1.8.15
 
 export UNO_UITEST_TARGETURI=http://localhost:8000
 export UNO_UITEST_DRIVERPATH_CHROME=$BUILD_SOURCESDIRECTORY/build/wasm-uitest-binaries/node_modules/chromedriver/lib/chromedriver
@@ -21,7 +22,7 @@ export UNO_TESTS_RESPONSE_FILE=$BUILD_SOURCESDIRECTORY/build/nunit.response
 mkdir -p $UNO_UITEST_SCREENSHOT_PATH
 
 ## The python server serves the current working directory, and may be changed by the nunit runner
-bash -c "cd $BUILD_SOURCESDIRECTORY/build/wasm-uitest-binaries/site-$SITE_SUFFIX; python server.py &"
+dotnet serve -p 8000 -d "$BUILD_SOURCESDIRECTORY/build/wasm-uitest-binaries/site-$SITE_SUFFIX"
 
 ## Build the NUnit configuration file
 echo "--trace=Verbose" > $UNO_TESTS_RESPONSE_FILE
