@@ -4,16 +4,8 @@
     <TargetFrameworks>net47;netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
 
-	<PropertyGroup Condition="'$(MSBuildRuntimeType)'=='Core' or '$(MSBuildVersion)' &gt;= '16.8'">
-		<TargetFrameworks>$(TargetFrameworks);net5.0-windows</TargetFrameworks>
-		<TargetFrameworksCI>$(TargetFrameworks);net5.0-windows</TargetFrameworksCI>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(UnoTargetFrameworkOverride)'!=''">
-		<TargetFrameworks>$(UnoTargetFrameworkOverride)</TargetFrameworks>
-		<TargetFrameworks Condition="'$(TargetFrameworks)'=='net5.0'">$(TargetFrameworks)-windows</TargetFrameworks>
-	</PropertyGroup>
-
+	<Import Project="../netcore-build-windows.props"/>
+	
 	<PropertyGroup>
 		<GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
 		<Authors>nventive</Authors>

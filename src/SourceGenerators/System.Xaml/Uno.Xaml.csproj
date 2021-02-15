@@ -14,10 +14,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(MSBuildRuntimeType)'=='Core' or '$(MSBuildVersion)' &gt;= '16.8'">
-		<TargetFrameworks>$(TargetFrameworks);net5.0</TargetFrameworks>
-		<TargetFrameworksCI>$(TargetFrameworks);net5.0</TargetFrameworksCI>
-	</PropertyGroup>
+	<Import Project="../../netcore-build.props"/>
 
 	<PropertyGroup>
 		<DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;NET_4_6;MONO;WIN_PLATFORM;MULTIPLEX_OS</DefineConstants>
