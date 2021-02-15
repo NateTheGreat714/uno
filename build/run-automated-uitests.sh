@@ -8,7 +8,7 @@ npm i chromedriver@84.0.1
 npm i puppeteer@5.1.0
 
 # install dotnet serve
-dotnet tool install --global dotnet-serve --version 1.8.15 --tool-path $BUILD_SOURCESDIRECTORY/build/tools Uno.PackageDiff
+dotnet tool install --global dotnet-serve --version 1.8.15 --tool-path $BUILD_SOURCESDIRECTORY/build/tools
 export PATH="$PATH:$BUILD_SOURCESDIRECTORY/build/tools"
 
 export UNO_UITEST_TARGETURI=http://localhost:8000

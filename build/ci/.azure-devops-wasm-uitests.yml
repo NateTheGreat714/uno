@@ -82,6 +82,7 @@ jobs:
 
   variables:
     NUGET_PACKAGES: $(build.sourcesdirectory)/.nuget
+    SITE_SUFFIX: 'netstandard2.0'
 
   steps:
   - checkout: self
@@ -112,6 +113,7 @@ jobs:
     env:
       BUILD_SOURCESDIRECTORY: "$(build.sourcesdirectory)"
       BUILD_ARTIFACTSTAGINGDIRECTORY: "$(build.artifactstagingdirectory)"
+      SITE_SUFFIX: "$(SITE_SUFFIX)"
 
     displayName: 'Running UI Tests'
 
