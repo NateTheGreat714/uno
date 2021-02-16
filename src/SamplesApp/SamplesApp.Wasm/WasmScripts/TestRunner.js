@@ -22,7 +22,8 @@
 
     static IsTestDone(test) {
         SampleRunner.init();
-        return this._isTestDone(test);
+        var adjustedValue = ` ${test}`; // https://github.com/dotnet/runtime/issues/48345
+        return this._isTestDone(adjustedValue);
     }
 
     static RunTest(test) {
