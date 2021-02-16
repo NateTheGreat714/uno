@@ -2,6 +2,7 @@
 using Windows.Foundation;
 using Windows.UI.Xaml.Wasm;
 using Uno.Disposables;
+using System.Threading.Tasks;
 
 namespace Windows.UI.Xaml.Media
 {
@@ -39,7 +40,41 @@ namespace Windows.UI.Xaml.Media
 			};
 		}
 
-		internal (UIElement defElement, IDisposable subscription) ToSvgElement()
+		internal async void SetStretchToNone(UIElement defElement, string preserveAspectRatio, ImageData data, double width, double height)
+		{
+			var command = "Uno.UI.WindowManager.current.getNaturalImageSize(\"" + data.Value + "\");";
+			var naturalSize = await Uno.Foundation.WebAssemblyRuntime.InvokeAsync(command);
+			var sizes = naturalSize.Split(';');
+			Console.WriteLine($"Got Size: {naturalSize}");
+			var imgElement = defElement.FindFirstChild();
+			if (imgElement != null)
+			{
+				imgElement.SetAttribute(
+					("width", sizes[0]),
+					("height", sizes[1])
+				);
+			}
+
+			var viewBoxAlignX = AlignmentX switch
+			{
+				AlignmentX.Left => 0,
+				AlignmentX.Center => (int.Parse(sizes[0]) - width) / 2,
+				AlignmentX.Right => (int.Parse(sizes[0]) - width),
+				_ => 0
+			};
+			var viewBoxAlignY = AlignmentY switch
+			{
+				AlignmentY.Top => 0,
+				AlignmentY.Center => (int.Parse(sizes[1]) - height) / 2,
+				AlignmentY.Bottom => (int.Parse(sizes[1]) - height),
+				_ => 0
+			};
+			//defElement.RemoveAttribute("patternContentUnits");
+			defElement.SetAttribute(("viewBox", $"{viewBoxAlignX} {viewBoxAlignY} {width} {height}"));
+			//defElement.SetHtmlContent($"<image width=\"{sizes[0]}\" height=\"{sizes[1]}\" preserveAspectRatio=\"{preserveAspectRatio}\" xlink:href=\"{data.Value}\" />");
+		}
+
+		internal (UIElement defElement, IDisposable subscription) ToSvgElement(double width, double height)
 		{
 			var pattern = new SvgElement("pattern");
 
@@ -48,24 +83,26 @@ namespace Windows.UI.Xaml.Media
 				AlignmentX.Left => "xMin",
 				AlignmentX.Center => "xMid",
 				AlignmentX.Right => "xMax",
-				_ => ""
+				_ => string.Empty
 			};
 			var alignY = AlignmentY switch
 			{
 				AlignmentY.Top => "YMin",
 				AlignmentY.Center => "YMid",
 				AlignmentY.Bottom => "YMax",
-				_ => ""
+				_ => string.Empty
 			};
 
 			var preserveAspectRatio = Stretch switch
 				{
+					Stretch.None => $"{alignX}{alignY}",
 					Stretch.Fill => "none",
-					Stretch.None => "",
-					Stretch.Uniform => "meet",
-					Stretch.UniformToFill => "slice",
-					_ => "",
+					Stretch.Uniform => $"{alignX}{alignY} meet",
+					Stretch.UniformToFill => $"{alignX}{alignY} slice",
+					_ => string.Empty
 				};
+
+
 
 			// Using this solution to set the viewBox/Size
 			// https://stackoverflow.com/a/13915777/1176099
@@ -73,10 +110,17 @@ namespace Windows.UI.Xaml.Media
 			pattern.SetAttribute(
 				("x", "0"),
 				("y", "0"),
-				("width", "1"),
-				("height", "1"),
-				("viewBox", "0 0 100 100"),
-				("preserveAspectRatio", alignX + alignY + " " + preserveAspectRatio));
+				("width", "100%"),
+				("height", "100%")
+			);
+
+			if (Stretch == Stretch.UniformToFill)
+			{
+				pattern.SetAttribute(
+					("preserveAspectRatio", $"{preserveAspectRatio}")
+				);
+			}
+
 
 			var subscriptionDisposable = new SerialDisposable();
 
@@ -96,11 +140,27 @@ namespace Windows.UI.Xaml.Media
 				switch (data.Kind)
 				{
 					case ImageDataKind.Empty:
-						pattern.SetHtmlContent("");
+						pattern.ClearChildren();
 						break;
 					case ImageDataKind.DataUri:
 					case ImageDataKind.Url:
-						pattern.SetHtmlContent($"<image width=\"100\" height=\"100\" xlink:href=\"{data.Value}\" />");
+						
+						var image = new SvgElement("image");
+						image.SetAttribute(
+							("width", "100%"),
+							("height", "100%"),
+							("preserveAspectRatio", preserveAspectRatio),
+							("href", data.Value)
+								
+						);
+						pattern.AddChild(image);
+						//pattern.SetHtmlContent($"<image width=\"100%\" height=\"100%\" preserveAspectRatio=\"{preserveAspectRatio}\" xlink:href=\"{data.Value}\" />");
+						
+						if (Stretch == Stretch.None)
+						{
+							SetStretchToNone(pattern, preserveAspectRatio, data, width, height);
+						}
+
 						break;
 				}
 			}
